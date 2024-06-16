@@ -1,0 +1,44 @@
+services:
+  squid-proxy:
+    image: ubuntu/squid
+    volumes:
+      - ./squid.conf:/etc/squid/squid.conf
+    ports:
+      - "3128:3128"
+    restart: always
+    
+    networks:
+      - internal
+      - external
+  
+  apache-proxy:
+    #image: httpd:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.apache-proxy
+    ports:
+      - "80:80"
+    networks:
+      - internal
+      - external
+
+  test-container:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - squid-proxy
+    environment:
+      - http_proxy=squid-proxy:3128
+      - HTTPS_PROXY=squid-proxy:3128
+      #- http_proxy=apache-proxy:80
+      #- HTTPS_PROXY=apache-proxy:80
+    networks:
+      - internal
+
+networks:
+  internal:
+    internal: true
+  external:
+    internal: false
+

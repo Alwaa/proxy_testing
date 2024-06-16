@@ -1,0 +1,20 @@
+# Use the official Apache base image
+FROM httpd:latest
+# Enable necessary proxy modules and required modules
+RUN sed -i \
+    -e 's/^#\(LoadModule proxy_module modules\/mod_proxy.so\)/\1/' \
+    -e 's/^#\(LoadModule proxy_http_module modules\/mod_proxy_http.so\)/\1/' \
+    -e 's/^#\(LoadModule proxy_balancer_module modules\/mod_proxy_balancer.so\)/\1/' \
+    -e 's/^#\(LoadModule lbmethod_byrequests_module modules\/mod_lbmethod_byrequests.so\)/\1/' \
+    -e 's/^#\(LoadModule headers_module modules\/mod_headers.so\)/\1/' \
+    -e 's/^#\(LoadModule slotmem_shm_module modules\/mod_slotmem_shm.so\)/\1/' \
+    /usr/local/apache2/conf/httpd.conf
+
+# Set ServerName to suppress FQDN warning
+RUN echo "ServerName localhost" >> /usr/local/apache2/conf/httpd.conf
+
+# Copy custom Apache configuration file into the container
+COPY apache.conf /usr/local/apache2/conf/extra/httpd-vhosts.conf
+
+# Include the custom virtual hosts configuration at the end of httpd.conf
+RUN echo "Include conf/extra/httpd-vhosts.conf" >> /usr/local/apache2/conf/httpd.conf
